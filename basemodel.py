@@ -6,7 +6,7 @@ from keras import backend
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
-from keras.optimizers import SGD
+from keras.optimizers import gradient_descent_v2
  
 
 # load train and test dataset
@@ -81,7 +81,7 @@ def define_model(in_shape=(128, 128, 3), out_shape=17):
     model.add(Dropout(0.5))
     model.add(Dense(out_shape, activation='sigmoid'))
     # compile model
-    opt = SGD(lr=0.01, momentum=0.9)
+    opt = gradient_descent_v2.SGD(lr=0.01, momentum=0.9)
     model.compile(optimizer=opt,
                   loss='binary_crossentropy',
                   metrics=[fbeta])
