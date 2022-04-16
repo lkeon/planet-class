@@ -10,9 +10,9 @@ from keras.optimizers import SGD
  
 
 # load train and test dataset
-def load_dataset():
+def load_dataset(file):
     # load dataset
-    data = np.load('planet_data.npz')
+    data = np.load(file)
     X, y = data['arr_0'], data['arr_1']
     # separate into train and test datasets
     trainX, testX, trainY, testY = train_test_split(X, y,
@@ -89,7 +89,7 @@ def define_model(in_shape=(128, 128, 3), out_shape=17):
 
  
 # plot diagnostic learning curves
-def summarize_diagnostics(history):
+def print_history(history):
     # plot loss
     plt.pyplot.subplot(211)
     plt.pyplot.title('Cross Entropy Loss')
@@ -106,10 +106,11 @@ def summarize_diagnostics(history):
     plt.pyplot.close()
 
  
-# run the test harness for evaluating a model
-def run_test_harness():
+# run classification to train the model
+def run_classification():
     # load dataset
-    trainX, trainY, testX, testY = load_dataset()
+    file = 'planet_data.npz'
+    trainX, trainY, testX, testY = load_dataset(file)
     # create data generator
     datagen = ImageDataGenerator(rescale=1.0/255.0)
     # prepare iterators
@@ -127,11 +128,11 @@ def run_test_harness():
     loss, fbeta = model.evaluate_generator(test_it,
                                            steps=len(test_it),
                                            verbose=0)
-    print('> loss=%.3f, fbeta=%.3f' % (loss, fbeta))
+    print('Loss: {}, fbeta: {}'.format(loss, fbeta))
     # learning curves
-    summarize_diagnostics(history)
+    print_history(history)
  
 
 # entry point, run the test harness
 if __name__ == '__main__':
-    run_test_harness()
+    run_classification()
