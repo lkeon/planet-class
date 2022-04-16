@@ -125,7 +125,7 @@ def run_classification():
                         validation_data=test_it,
                         validation_steps=len(test_it),
                         epochs=200,
-                        verbose=0)
+                        verbose=1)
     # evaluate model
     loss, fbeta = model.evaluate(test_it,
                                  steps=len(test_it),
