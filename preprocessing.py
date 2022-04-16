@@ -70,7 +70,7 @@ def one_hot_encode(tags, labelToNum):
     return trainHot
 
 
-def load_dataset(path, trainLabels, labelToNum, number=None):
+def load_dataset(path, trainLabels, labelToNum, number=None, imageSize=128):
     '''
     Import images and labels.
     '''
@@ -81,7 +81,7 @@ def load_dataset(path, trainLabels, labelToNum, number=None):
         files = files[:number]
 
     for file in files:
-        photo = load_img(path + file, target_size=(64, 64))
+        photo = load_img(path + file, target_size=(imageSize, imageSize))
         photo = img_to_array(photo, dtype='uint8')
         tags = trainLabels[file[:-4]]
         label = one_hot_encode(tags, labelToNum)
@@ -96,6 +96,6 @@ if __name__ == '__main__':
     fileName = 'data/train_v2.csv'
     labelToNum, numToLabel = get_labels_maps(fileName)
     trainLabels = get_train_labels(fileName)
-    X, y = load_dataset('data/train-jpg/', trainLabels, labelToNum, 100)
+    X, y = load_dataset('data/train-jpg/', trainLabels, labelToNum)
     print(X.shape, y.shape)
-    np.savez_compressed('planet_data.npz', X, y)
+    np.savez_compressed('data/planet_data.npz', X, y)

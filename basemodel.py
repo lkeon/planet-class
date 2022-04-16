@@ -81,7 +81,8 @@ def define_model(in_shape=(128, 128, 3), out_shape=17):
     model.add(Dropout(0.5))
     model.add(Dense(out_shape, activation='sigmoid'))
     # compile model
-    opt = gradient_descent_v2.SGD(lr=0.01, momentum=0.9)
+    opt = gradient_descent_v2.SGD(lr=0.01,
+                                  momentum=0.9)
     model.compile(optimizer=opt,
                   loss='binary_crossentropy',
                   metrics=[fbeta])
@@ -109,7 +110,7 @@ def print_history(history):
 # run classification to train the model
 def run_classification():
     # load dataset
-    file = 'planet_data.npz'
+    file = 'data/planet_data.npz'
     trainX, trainY, testX, testY = load_dataset(file)
     # create data generator
     datagen = ImageDataGenerator(rescale=1.0/255.0)
@@ -119,11 +120,12 @@ def run_classification():
     # define model
     model = define_model()
     # fit model
-    history = model.fit_generator(train_it,
-                                  steps_per_epoch=len(train_it),
-                                  validation_data=test_it,
-                                  validation_steps=len(test_it),
-                                  epochs=200, verbose=0)
+    history = model.fit(train_it,
+                        steps_per_epoch=len(train_it),
+                        validation_data=test_it,
+                        validation_steps=len(test_it),
+                        epochs=200,
+                        verbose=0)
     # evaluate model
     loss, fbeta = model.evaluate_generator(test_it,
                                            steps=len(test_it),
