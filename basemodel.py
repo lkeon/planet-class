@@ -10,7 +10,7 @@ from keras.optimizers import gradient_descent_v2
  
 
 # load train and test dataset
-def load_dataset(file):
+def load_numpy_dataset(file):
     # load dataset
     data = np.load(file)
     X, y = data['arr_0'], data['arr_1']
@@ -92,26 +92,26 @@ def define_model(in_shape=(128, 128, 3), out_shape=17):
 # plot diagnostic learning curves
 def print_history(history):
     # plot loss
-    plt.pyplot.subplot(211)
-    plt.pyplot.title('Cross Entropy Loss')
-    plt.pyplot.plot(history.history['loss'], color='blue', label='train')
-    plt.pyplot.plot(history.history['val_loss'], color='orange', label='test')
+    plt.subplot(211)
+    plt.title('Cross Entropy Loss')
+    plt.plot(history.history['loss'], color='blue', label='train')
+    plt.plot(history.history['val_loss'], color='orange', label='test')
     # plot accuracy
-    plt.pyplot.subplot(212)
-    plt.pyplot.title('Fbeta')
-    plt.pyplot.plot(history.history['fbeta'], color='blue', label='train')
-    plt.pyplot.plot(history.history['val_fbeta'], color='orange', label='test')
+    plt.subplot(212)
+    plt.title('Fbeta')
+    plt.plot(history.history['fbeta'], color='blue', label='train')
+    plt.plot(history.history['val_fbeta'], color='orange', label='test')
     # save plot to file
     filename = sys.argv[0].split('/')[-1]
-    plt.pyplot.savefig(filename + '_plot.png')
-    plt.pyplot.close()
+    plt.savefig(filename + '_plot.png')
+    plt.close()
 
  
 # run classification to train the model
 def run_classification():
     # load dataset
     file = 'data/planet_data.npz'
-    trainX, trainY, testX, testY = load_dataset(file)
+    trainX, trainY, testX, testY = load_numpy_dataset(file)
     # create data generator
     datagen = ImageDataGenerator(rescale=1.0/255.0)
     # prepare iterators
@@ -127,9 +127,9 @@ def run_classification():
                         epochs=200,
                         verbose=0)
     # evaluate model
-    loss, fbeta = model.evaluate_generator(test_it,
-                                           steps=len(test_it),
-                                           verbose=0)
+    loss, fbeta = model.evaluate(test_it,
+                                 steps=len(test_it),
+                                 verbose=0)
     print('Loss: {}, fbeta: {}'.format(loss, fbeta))
     # learning curves
     print_history(history)
