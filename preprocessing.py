@@ -7,8 +7,7 @@ from keras.preprocessing.image import load_img, img_to_array
 
 
 def plot_train_images(folder):
-    '''
-    Plot 9 random images in the dataset.
+    ''' Plot 9 random images in the dataset.
     '''
     imageRand = np.random.randint(0, high=40479, size=9)
 
@@ -23,8 +22,7 @@ def plot_train_images(folder):
 
 
 def get_labels_maps(fileName):
-    '''
-    Return dictionaries maping from labels to numbers
+    ''' Return dictionaries maping from labels to numbers
     and vice versa.
     '''
     tagsCsv = read_csv(fileName)
@@ -46,8 +44,7 @@ def get_labels_maps(fileName):
 
 
 def get_train_labels(fileName):
-    '''
-    Get a dictionary linking image names to tags.
+    ''' Get a dictionary linking image names to tags.
     '''
     # Read CSV file
     tagsCsv = read_csv(fileName)
@@ -61,8 +58,7 @@ def get_train_labels(fileName):
 
 
 def one_hot_encode(tags, labelToNum):
-    '''
-    Create one hot encoded vector for each image.
+    ''' Create one hot encoded vector for each image.
     '''
     trainHot = np.zeros(len(labelToNum), dtype='uint8')
     for tag in tags:
@@ -71,8 +67,7 @@ def one_hot_encode(tags, labelToNum):
 
 
 def load_dataset(path, trainLabels, labelToNum, number=None, imageSize=128):
-    '''
-    Import images and labels.
+    ''' Import images and labels.
     '''
     photos, labels = list(), list()
     files = listdir(path)
@@ -99,3 +94,4 @@ if __name__ == '__main__':
     X, y = load_dataset('data/train-jpg/', trainLabels, labelToNum)
     print(X.shape, y.shape)
     np.savez_compressed('data/planet_data.npz', X, y)
+    print('Dataset saved to disk.')

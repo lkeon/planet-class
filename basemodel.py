@@ -1,17 +1,17 @@
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from keras import backend
 from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
 from keras.optimizers import gradient_descent_v2
+from keras.applications.vgg16 import VGG16
  
 
-# load train and test dataset
 def load_numpy_dataset(file):
-    # load dataset
+    ''' Load database that was saved as npz.
+    '''
     data = np.load(file)
     X, y = data['arr_0'], data['arr_1']
     # separate into train and test datasets
@@ -22,8 +22,9 @@ def load_numpy_dataset(file):
     return trainX, trainY, testX, testY
  
 
-# calculate fbeta score for multi-class/label classification
 def fbeta(ytrue, ypred, beta=2):
+    ''' Calculate fbeta score for multilabel classification.
+    '''
     # clip predictions
     ypred = backend.clip(ypred, 0, 1)
     # calculate elements
@@ -40,8 +41,9 @@ def fbeta(ytrue, ypred, beta=2):
     return fbeta_score
 
  
-# define cnn model
 def define_model(in_shape=(128, 128, 3), out_shape=17):
+    ''' Define sequential model.
+    '''
     model = Sequential()
     model.add(Conv2D(32, (3, 3),
                      activation='relu',
@@ -88,53 +90,98 @@ def define_model(in_shape=(128, 128, 3), out_shape=17):
                   metrics=[fbeta])
     return model
 
+
+def define_vgg_model(in_shape=(128, 128, 3), out_shape=17, trainable=False):
+    ''' This function returns a VGGG model as defined in Keras.
+    '''
+    # load model from Keras
+    model = VGG16(include_top=False, input_shape=in_shape)
+    # set layers as not trainable
+    for layer in model.layers:
+        layer.trainable = False
+    # allow last block to be trinable
+    if trainable:
+        model.get_layer('block5_conv1').trainable = True
+        model.get_layer('block5_conv2').trainable = True
+        model.get_layer('block5_conv3').trainable = True
+        model.get_layer('block5_pool').trainable = True
+    # add new layers for classification
+    flatten_layer = Flatten()(model.layers[-1].output)
+    class_layer = Dense(128,
+                        activation='relu',
+                        kernel_initializer='he_uniform')(flatten_layer)
+    output = Dense(out_shape, activation='sigmoid')(class_layer)
+    # create new model
+    model = Model(inputs=model.inputs, outputs=output)
+    # compile model
+    opt = gradient_descent_v2.SGD(lr=0.01,
+                                  momentum=0.9)
+    model.compile(optimizer=opt,
+                  loss='binary_crossentropy',
+                  metrics=[fbeta])
+    return model
+
  
-# plot diagnostic learning curves
 def print_history(history):
+    ''' Show plot history.
+    '''
     # plot loss
     plt.subplot(211)
     plt.title('Cross Entropy Loss')
     plt.plot(history.history['loss'], color='blue', label='train')
     plt.plot(history.history['val_loss'], color='orange', label='test')
+    plt.legend()
     # plot accuracy
     plt.subplot(212)
     plt.title('Fbeta')
     plt.plot(history.history['fbeta'], color='blue', label='train')
     plt.plot(history.history['val_fbeta'], color='orange', label='test')
-    # save plot to file
-    filename = sys.argv[0].split('/')[-1]
-    plt.savefig(filename + '_plot.png')
-    plt.close()
+    plt.legend()
+    plt.show()
 
  
-# run classification to train the model
-def run_classification():
+def run_classification(mode='default', trainable=False):
+    ''' Main function to be run.
+    '''
     # load dataset
     file = 'data/planet_data.npz'
     trainX, trainY, testX, testY = load_numpy_dataset(file)
     # create data generator
-    datagen = ImageDataGenerator(rescale=1.0/255.0)
+    if mode == 'default':
+        model = define_model()
+        datagen_train = ImageDataGenerator(rescale=1/255,
+                                           horizontal_flip=True,
+                                           vertical_flip=True,
+                                           rotation_range=90)
+        datagen_test = ImageDataGenerator(rescale=1/255)
+    elif mode == 'vgg':
+        model = define_vgg_model(trainable=trainable)
+        datagen_train = ImageDataGenerator(featurewise_center=True,
+                                           horizontal_flip=True,
+                                           vertical_flip=True,
+                                           rotation_range=90)
+        datagen_test = ImageDataGenerator(featurewise_center=True)
+    # specify imagenet mean values for centering
+    datagen_train.mean = [123.68, 116.779, 103.939]
+    datagen_test.mean = [123.68, 116.779, 103.939]
     # prepare iterators
-    train_it = datagen.flow(trainX, trainY, batch_size=128)
-    test_it = datagen.flow(testX, testY, batch_size=128)
-    # define model
-    model = define_model()
+    train_it = datagen_train.flow(trainX, trainY, batch_size=12)
+    test_it = datagen_test.flow(testX, testY, batch_size=12)
     # fit model
     history = model.fit(train_it,
                         steps_per_epoch=len(train_it),
                         validation_data=test_it,
                         validation_steps=len(test_it),
-                        epochs=200,
+                        epochs=10,
                         verbose=1)
     # evaluate model
     loss, fbeta = model.evaluate(test_it,
                                  steps=len(test_it),
                                  verbose=0)
     print('Loss: {}, fbeta: {}'.format(loss, fbeta))
-    # learning curves
     print_history(history)
  
 
-# entry point, run the test harness
+# Run if executed as a script
 if __name__ == '__main__':
     run_classification()
